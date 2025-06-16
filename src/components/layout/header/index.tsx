@@ -1,5 +1,5 @@
-import {Button} from "../button"
-import {Input} from "../input"
+import { Button } from "../../shared/button"
+import { Input } from "../../shared/input"
 
 export function Header() {
   return (

@@ -11,11 +11,11 @@ import {
 } from '@dnd-kit/core';
 import { ArrowLeftIcon, PlayIcon } from 'lucide-react';
 
-import { Button } from '../../components/button';
-import { Card } from '../../components/card';
-import { Column } from '../../components/column';
-import { Scene, type SceneProps } from '../../components/scene';
-import Title from '../../components/title';
+import { Button } from '../../components/shared/button';
+import { Card } from '../../components/shared/card';
+import { Column } from '../../components/shared/column';
+import { Scene, type SceneProps } from '../../components/features/Studio/scene';
+import Title from '../../components/features/Studio/title';
 import { useProduction } from '../../hooks/useProduction';
 import { type Scene as SceneDetails, initialSceneState, sceneReducer } from '../../reducers/scenes';
 

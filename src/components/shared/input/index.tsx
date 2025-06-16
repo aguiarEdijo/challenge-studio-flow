@@ -1,8 +1,8 @@
-import {forwardRef} from "react"
+import { forwardRef } from "react"
 
-import {type VariantProps, cva} from "class-variance-authority"
+import { type VariantProps, cva } from "class-variance-authority"
 
-import {cn} from "../../utils/cn"
+import { cn } from "../../../utils/cn"
 
 const inputVariants = cva(
   "flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
@@ -25,16 +25,16 @@ const inputVariants = cva(
   }
 )
 
-interface InputProps extends Omit, VariantProps {
+interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>, VariantProps<typeof inputVariants> {
   error?: boolean
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({className, variant, inputSize, error, type, ...props}, ref) => {
+  ({ className, variant, inputSize, error, type, ...props }, ref) => {
     return (
       <input
         type={type}
-        className={cn(inputVariants({variant: error ? "error" : variant, inputSize, className}))}
+        className={cn(inputVariants({ variant: error ? "error" : variant, inputSize, className }))}
         ref={ref}
         {...props}
       />
@@ -44,4 +44,4 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
 Input.displayName = "Input"
 
-export {Input}
+export { Input }

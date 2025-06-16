@@ -1,6 +1,6 @@
-import {NavLink} from "react-router-dom"
+import { NavLink } from "react-router-dom"
 
-import {cn} from "../../utils/cn"
+import { cn } from "../../../utils/cn"
 
 const navigation = [
   {
@@ -36,7 +36,7 @@ export function Sidebar() {
           <NavLink
             key={item.name}
             to={item.href}
-            className={({isActive}) =>
+            className={({ isActive }) =>
               cn(
                 "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 isActive

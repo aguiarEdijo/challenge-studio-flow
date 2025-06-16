@@ -1,9 +1,9 @@
-import {Fragment, useState} from "react"
+import { Fragment, useState } from "react"
 
-import {Dialog, DialogPanel, DialogTitle, Transition, TransitionChild} from "@headlessui/react"
-import {XIcon} from "lucide-react"
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react"
+import { XIcon } from "lucide-react"
 
-import {type Scene as SceneDetails} from "../../reducers/scenes"
+import { type Scene as SceneDetails } from "../../../../reducers/scenes"
 
 interface ModalProps {
   isOpen: boolean
@@ -12,7 +12,7 @@ interface ModalProps {
   onUpdate?: (scene: SceneDetails) => void
 }
 
-const steps: Record = {
+const steps: Record<number, string> = {
   1: "Roteirizado",
   2: "Em pré-produção",
   3: "Em gravação",
@@ -20,7 +20,7 @@ const steps: Record = {
   5: "Finalizado"
 }
 
-const Modal = ({isOpen, onClose, scene, onUpdate}: ModalProps) => {
+const Modal = ({ isOpen, onClose, scene, onUpdate }: ModalProps) => {
   const [editedScene, setEditedScene] = useState<SceneDetails | undefined>(scene)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -30,12 +30,12 @@ const Modal = ({isOpen, onClose, scene, onUpdate}: ModalProps) => {
     if (field === "recordDate") {
       const date = new Date(value as string)
       if (date.toString() === "Invalid Date") {
-        setEditedScene({...editedScene, [field as string]: value})
+        setEditedScene({ ...editedScene, [field as string]: value })
         return
       }
     }
 
-    setEditedScene({...editedScene, [field]: value})
+    setEditedScene({ ...editedScene, [field]: value })
   }
 
   const handleSave = async () => {
@@ -194,4 +194,4 @@ const Modal = ({isOpen, onClose, scene, onUpdate}: ModalProps) => {
   )
 }
 
-export {Modal, type SceneDetails}
+export { Modal, type SceneDetails }
