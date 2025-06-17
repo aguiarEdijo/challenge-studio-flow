@@ -11,3 +11,86 @@
     @apply bg-background text-foreground;
   }
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS básico sem interferências no drag and drop */
+.kanban-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 100%;
+  /* Previne scroll durante drag */
+  scroll-behavior: smooth;
+}
+
+.column-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Previne scroll horizontal durante drag */
+.kanban-container:has(.dnd-kit-dragging) {
+  overflow-x: hidden;
+}
+
+/* Alternativa para navegadores que não suportam :has() */
+.kanban-container.dragging {
+  overflow-x: hidden;
+}
+
+/* Melhorias para drag and drop */
+@layer utilities {
+
+  /* Previne seleção de texto durante drag */
+  .select-none {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Melhora a performance do drag */
+  .drag-optimized {
+    will-change: transform;
+    transform: translateZ(0);
+  }
+
+  /* Cursor personalizado para drag */
+  .cursor-grab {
+    cursor: grab;
+  }
+
+  .cursor-grabbing {
+    cursor: grabbing;
+  }
+
+  /* Previne eventos de touch indesejados */
+  .touch-none {
+    touch-action: none;
+  }
+
+  /* Melhora a aparência durante drag */
+  .drag-overlay {
+    pointer-events: none;
+    z-index: 999;
+  }
+}
+
+/* Animações suaves para transições */
+@layer components {
+  .scene-card {
+    transition: all 150ms ease-out;
+  }
+
+  .scene-card:hover {
+    transform: translateY(-1px);
+  }
+
+  .scene-card:active {
+    transform: translateY(0);
+  }
+}
