@@ -19,7 +19,7 @@ interface DragSceneData {
  * Centraliza a lógica de drag and drop e mantém o estado do item ativo
  * Aplica regras de transição válidas entre etapas com mensagens específicas
  */
-export function useDragAndDrop(onMoveScene: (id: string, toStep: number) => void) {
+export function useDragAndDrop(onMoveScene: (id: string, toStep: number) => Promise<void>) {
     const [activeScene, setActiveScene] = useState<DragSceneData | null>(null)
     const [showInvalidTransition, setShowInvalidTransition] = useState(false)
     const [transitionMessage, setTransitionMessage] = useState('')
@@ -56,7 +56,7 @@ export function useDragAndDrop(onMoveScene: (id: string, toStep: number) => void
         })
     }, [])
 
-    const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const handleDragEnd = useCallback(async (event: DragEndEvent) => {
         setActiveScene(null)
 
         const { active, over } = event
@@ -72,7 +72,12 @@ export function useDragAndDrop(onMoveScene: (id: string, toStep: number) => void
         const validation = validateTransition(fromStep, toStep)
 
         if (validation.isValid) {
-            onMoveScene(active.id as string, toStep)
+            try {
+                await onMoveScene(active.id as string, toStep)
+            } catch (error) {
+                // O erro será tratado pelo hook useScenes e exibido pelo ErrorFeedback
+                console.error('Erro ao mover cena:', error)
+            }
         } else {
             // Mostra feedback visual com mensagem específica
             setTransitionMessage(validation.message)

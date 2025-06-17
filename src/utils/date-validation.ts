@@ -10,14 +10,14 @@
 export function isValidRecordingDate(dateString: string): boolean {
     if (!dateString) return true // Permite campo vazio
 
-    const selectedDate = new Date(dateString)
+    // Converte a data string para um timestamp de meia-noite
+    const selectedTimestamp = new Date(dateString + 'T00:00:00').getTime()
+
+    // Obtém o timestamp de meia-noite de hoje
     const today = new Date()
+    const todayTimestamp = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
 
-    // Remove o horário para comparar apenas as datas
-    today.setHours(0, 0, 0, 0)
-    selectedDate.setHours(0, 0, 0, 0)
-
-    return selectedDate >= today
+    return selectedTimestamp >= todayTimestamp
 }
 
 /**
@@ -26,7 +26,10 @@ export function isValidRecordingDate(dateString: string): boolean {
  */
 export function getMinRecordingDate(): string {
     const today = new Date()
-    return today.toISOString().split('T')[0]
+    const year = today.getFullYear()
+    const month = String(today.getMonth() + 1).padStart(2, '0')
+    const day = String(today.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
 }
 
 /**

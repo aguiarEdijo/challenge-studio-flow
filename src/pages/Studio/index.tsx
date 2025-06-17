@@ -5,10 +5,11 @@ import { ProductionList } from '../../components/features/Studio/production-list
 import { StudioHeader } from '../../components/features/Studio/studio-header'
 import { KanbanBoard } from '../../components/features/Studio/kanban-board'
 import { TransitionFeedback } from '../../components/features/Studio/transition-feedback'
+import { ErrorFeedback } from '../../components/shared/error-feedback'
 
 const Studio = () => {
   const { selectedProduction, productions, selectProduction, deselectProduction } = useProduction()
-  const { scenes, moveScene, updateScene } = useScenes()
+  const { scenes, moveScene, updateScene, operationError, clearOperationError } = useScenes()
   const { activeScene, showInvalidTransition, transitionMessage, handleDragStart, handleDragEnd } = useDragAndDrop(moveScene)
 
   if (!selectedProduction) {
@@ -31,6 +32,14 @@ const Studio = () => {
         isVisible={showInvalidTransition}
         message={transitionMessage}
         type="error"
+      />
+
+      <ErrorFeedback
+        isVisible={!!operationError}
+        message={operationError || ''}
+        onClose={clearOperationError}
+        autoHide={true}
+        autoHideDelay={5000}
       />
     </div>
   )

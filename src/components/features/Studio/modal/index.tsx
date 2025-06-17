@@ -18,12 +18,14 @@ const Modal = ({ isOpen, onClose, scene, onUpdate }: ModalProps) => {
   const [editedScene, setEditedScene] = useState<SceneDetails | undefined>(scene)
   const [isSaving, setIsSaving] = useState(false)
   const [dateError, setDateError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   // Reset do estado quando o modal abre/fecha ou quando a cena muda
   useEffect(() => {
     if (isOpen && scene) {
       setEditedScene({ ...scene })
       setDateError(null)
+      setSaveError(null)
     }
   }, [isOpen, scene])
 
@@ -52,22 +54,17 @@ const Modal = ({ isOpen, onClose, scene, onUpdate }: ModalProps) => {
     }
 
     setIsSaving(true)
+    setSaveError(null)
 
-    await fetch(`${import.meta.env.VITE_API_URL}/scenes/${editedScene.id}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        ...editedScene,
-        updatedAt: new Date().toISOString(),
-        version: Math.random()
-      })
-    })
-
-    onUpdate(editedScene)
-    onClose()
-    setIsSaving(false)
+    try {
+      await onUpdate(editedScene)
+      onClose()
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao salvar cena'
+      setSaveError(errorMessage)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   // Obtém as próximas etapas válidas baseadas no step ORIGINAL da cena
@@ -199,6 +196,17 @@ const Modal = ({ isOpen, onClose, scene, onUpdate }: ModalProps) => {
                         className='mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-primary focus:outline-none focus:ring-2 focus:ring-primary/50'
                       />
                     </div>
+
+                    {/* Mensagem de erro de salvamento */}
+                    {saveError && (
+                      <div className='flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-md'>
+                        <AlertCircleIcon className='h-4 w-4 text-red-600 mt-0.5 flex-shrink-0' />
+                        <div className='flex-1'>
+                          <p className='text-sm font-medium text-red-800 mb-1'>Erro ao salvar</p>
+                          <p className='text-xs text-red-700'>{saveError}</p>
+                        </div>
+                      </div>
+                    )}
 
                     <div className='mt-6 flex justify-end gap-3'>
                       <button
