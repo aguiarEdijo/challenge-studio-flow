@@ -27,11 +27,12 @@ export const KanbanBoard = memo(({
 }: KanbanBoardProps) => {
     const [isDragging, setIsDragging] = useState(false)
 
+    // Configuração otimizada dos sensores para melhor fluidez
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                delay: 200,
-                tolerance: 5,
+                delay: 100, // Reduzido de 200ms para 100ms
+                tolerance: 8, // Aumentado de 5px para 8px para mais tolerância
             },
         }),
     )
@@ -82,7 +83,10 @@ export const KanbanBoard = memo(({
             >
                 {columns}
 
-                <DragOverlay dropAnimation={null}>
+                <DragOverlay
+                    dropAnimation={null}
+                    modifiers={[]}
+                >
                     {activeScene ? <Scene {...activeScene} /> : null}
                 </DragOverlay>
             </DndContext>

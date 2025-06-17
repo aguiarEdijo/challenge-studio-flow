@@ -89,9 +89,12 @@ const Scene = memo(({
   }, [onUpdate]);
 
   // Callback memoizado para abrir o modal
-  const handleOpenModal = useCallback(() => {
+  const handleOpenModal = useCallback((e: React.MouseEvent) => {
+    // Previne a abertura do modal durante o drag
+    if (isDragging) return;
+    e.stopPropagation();
     setIsModalOpen(true);
-  }, []);
+  }, [isDragging]);
 
   // Callback memoizado para fechar o modal
   const handleCloseModal = useCallback(() => {
@@ -99,9 +102,12 @@ const Scene = memo(({
   }, []);
 
   const sceneContent = (
-    <div className='flex flex-col gap-1'>
-      <span className='text-sm font-medium'>{computedTitle}</span>
-      <span className='text-xs'>{computedDescription}</span>
+    <div
+      className='flex flex-col gap-1 select-none'
+      onClick={handleOpenModal}
+    >
+      <span className='text-sm font-medium leading-tight'>{computedTitle}</span>
+      <span className='text-xs leading-tight text-accent/80'>{computedDescription}</span>
     </div>
   );
 
@@ -121,11 +127,17 @@ const Scene = memo(({
         }}
         {...listeners}
         {...attributes}
-        onClick={handleOpenModal}
-        className={`flex flex-col gap-2 p-2 cursor-pointer rounded-lg border border-border ${isDragging
-          ? 'bg-primary/50 text-accent/80'
-          : 'bg-primary text-accent hover:bg-primary/90'
-          }`}
+        className={`
+          scene-card drag-optimized
+          flex flex-col gap-2 p-3 
+          cursor-grab active:cursor-grabbing
+          rounded-lg border border-border/50
+          select-none touch-none
+          ${isDragging
+            ? 'bg-primary/90 text-accent shadow-2xl scale-105 rotate-1 z-50'
+            : 'bg-primary text-accent hover:bg-primary/90 hover:shadow-lg hover:scale-[1.02]'
+          }
+        `}
       >
         {sceneContent}
       </div>
