@@ -1,5 +1,5 @@
-import {createContext, useEffect, useReducer} from "react"
-import {type ReactNode} from "react"
+import { createContext, useEffect, useReducer } from "react"
+import { type ReactNode } from "react"
 
 interface Production {
   id: string
@@ -15,10 +15,10 @@ interface ProductionState {
 }
 
 type ProductionAction =
-  | {type: "SET_PRODUCTIONS"; payload: Production[]}
-  | {type: "SELECT_PRODUCTION"; payload: Production}
-  | {type: "SET_LOADING"; payload: boolean}
-  | {type: "SET_ERROR"; payload: string | null}
+  | { type: "SET_PRODUCTIONS"; payload: Production[] }
+  | { type: "SELECT_PRODUCTION"; payload: Production }
+  | { type: "SET_LOADING"; payload: boolean }
+  | { type: "SET_ERROR"; payload: string | null }
 
 const initialState: ProductionState = {
   productions: [],
@@ -58,18 +58,18 @@ function productionReducer(state: ProductionState, action: ProductionAction): Pr
 
 interface ProductionContextType extends ProductionState {
   selectProduction: (production: Production) => void
-  fetchProductions: () => Promise
+  fetchProductions: () => Promise<void>
   deselectProduction: () => void
 }
 
 const ProductionContext = createContext<ProductionContextType | undefined>(undefined)
 
-function ProductionProvider({children}: {children: ReactNode}) {
+function ProductionProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(productionReducer, initialState)
 
   const fetchProductions = async () => {
     try {
-      dispatch({type: "SET_LOADING", payload: true})
+      dispatch({ type: "SET_LOADING", payload: true })
       const response = await fetch(`${import.meta.env.VITE_API_URL}/productions`)
 
       if (!response.ok) {
@@ -77,22 +77,22 @@ function ProductionProvider({children}: {children: ReactNode}) {
       }
 
       const data = await response.json()
-      dispatch({type: "SET_PRODUCTIONS", payload: data})
+      dispatch({ type: "SET_PRODUCTIONS", payload: data })
     } catch (error) {
       dispatch({
         type: "SET_ERROR",
         payload: error instanceof Error ? error.message : "An error occurred"
       })
     } finally {
-      dispatch({type: "SET_LOADING", payload: false})
+      dispatch({ type: "SET_LOADING", payload: false })
     }
   }
 
   const selectProduction = (production: Production) => {
-    dispatch({type: "SELECT_PRODUCTION", payload: production})
+    dispatch({ type: "SELECT_PRODUCTION", payload: production })
   }
   const deselectProduction = () => {
-    dispatch({type: "SELECT_PRODUCTION", payload: initialState.productions[0]})
+    dispatch({ type: "SELECT_PRODUCTION", payload: initialState.productions[0] })
   }
 
   useEffect(() => {
@@ -117,4 +117,4 @@ function ProductionProvider({children}: {children: ReactNode}) {
   )
 }
 
-export {ProductionProvider, ProductionContext}
+export { ProductionProvider, ProductionContext, type Production }

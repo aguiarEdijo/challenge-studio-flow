@@ -1,9 +1,11 @@
-import { Fragment, useState } from "react"
+import { Fragment, useState, useEffect } from "react"
 
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react"
-import { XIcon } from "lucide-react"
+import { XIcon, AlertCircleIcon } from "lucide-react"
 
 import { type Scene as SceneDetails } from "../../../../reducers/scenes"
+import { PRODUCTION_STEPS, getValidNextSteps, isLastStep } from "../../../../utils/scene-transitions"
+import { isValidRecordingDate, getMinRecordingDate, getDateErrorMessage } from "../../../../utils/date-validation"
 
 interface ModalProps {
   isOpen: boolean
@@ -12,27 +14,30 @@ interface ModalProps {
   onUpdate?: (scene: SceneDetails) => void
 }
 
-const steps: Record<number, string> = {
-  1: "Roteirizado",
-  2: "Em pré-produção",
-  3: "Em gravação",
-  4: "Em pós-produção",
-  5: "Finalizado"
-}
-
 const Modal = ({ isOpen, onClose, scene, onUpdate }: ModalProps) => {
   const [editedScene, setEditedScene] = useState<SceneDetails | undefined>(scene)
   const [isSaving, setIsSaving] = useState(false)
+  const [dateError, setDateError] = useState<string | null>(null)
+
+  // Reset do estado quando o modal abre/fecha ou quando a cena muda
+  useEffect(() => {
+    if (isOpen && scene) {
+      setEditedScene({ ...scene })
+      setDateError(null)
+    }
+  }, [isOpen, scene])
 
   const handleChange = (field: keyof SceneDetails, value: string | number) => {
     if (!editedScene) return
 
     if (field === "recordDate") {
-      const date = new Date(value as string)
-      if (date.toString() === "Invalid Date") {
-        setEditedScene({ ...editedScene, [field as string]: value })
-        return
-      }
+      const dateValue = value as string
+      setEditedScene({ ...editedScene, [field]: dateValue })
+
+      // Valida a data e atualiza o erro
+      const errorMessage = getDateErrorMessage(dateValue)
+      setDateError(errorMessage)
+      return
     }
 
     setEditedScene({ ...editedScene, [field]: value })
@@ -40,6 +45,11 @@ const Modal = ({ isOpen, onClose, scene, onUpdate }: ModalProps) => {
 
   const handleSave = async () => {
     if (!editedScene || !onUpdate) return
+
+    // Verifica se há erro de data antes de salvar
+    if (dateError) {
+      return
+    }
 
     setIsSaving(true)
 
@@ -59,6 +69,10 @@ const Modal = ({ isOpen, onClose, scene, onUpdate }: ModalProps) => {
     onClose()
     setIsSaving(false)
   }
+
+  // Obtém as próximas etapas válidas baseadas no step ORIGINAL da cena
+  const originalStep = scene?.step
+  const validNextSteps = originalStep !== undefined ? getValidNextSteps(originalStep) : []
 
   return (
     <Transition appear show={isOpen} as={Fragment}>
@@ -133,17 +147,29 @@ const Modal = ({ isOpen, onClose, scene, onUpdate }: ModalProps) => {
 
                     <div>
                       <h4 className='text-sm font-medium text-primary/70'>Status</h4>
-                      <select
-                        value={editedScene.step}
-                        onChange={e => handleChange("step", Number(e.target.value))}
-                        className='mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-primary focus:outline-none focus:ring-2 focus:ring-primary/50'
-                      >
-                        {Object.entries(steps).map(([value, label]) => (
-                          <option key={value} value={value}>
-                            {label}
+                      {originalStep !== undefined && isLastStep(originalStep) ? (
+                        <div className='mt-1 w-full rounded-md border border-border bg-muted px-3 py-2 text-muted-foreground'>
+                          {PRODUCTION_STEPS[originalStep as keyof typeof PRODUCTION_STEPS]} (Finalizado)
+                        </div>
+                      ) : (
+                        <select
+                          value={editedScene.step}
+                          onChange={e => handleChange("step", Number(e.target.value))}
+                          className='mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-primary focus:outline-none focus:ring-2 focus:ring-primary/50'
+                        >
+                          {/* Mostra a etapa atual */}
+                          <option value={originalStep}>
+                            {originalStep !== undefined ? PRODUCTION_STEPS[originalStep as keyof typeof PRODUCTION_STEPS] : ''} (Atual)
                           </option>
-                        ))}
-                      </select>
+
+                          {/* Mostra apenas as próximas etapas válidas baseadas no step original */}
+                          {validNextSteps.map((step) => (
+                            <option key={step} value={step}>
+                              {PRODUCTION_STEPS[step as keyof typeof PRODUCTION_STEPS]}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
 
                     <div>
@@ -151,9 +177,17 @@ const Modal = ({ isOpen, onClose, scene, onUpdate }: ModalProps) => {
                       <input
                         type='date'
                         value={editedScene.recordDate}
+                        min={getMinRecordingDate()}
                         onChange={e => handleChange("recordDate", e.target.value)}
-                        className='mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-primary focus:outline-none focus:ring-2 focus:ring-primary/50'
+                        className={`mt-1 w-full rounded-md border bg-background px-3 py-2 text-primary focus:outline-none focus:ring-2 focus:ring-primary/50 ${dateError ? 'border-red-500 focus:ring-red-500/50' : 'border-border'
+                          }`}
                       />
+                      {dateError && (
+                        <div className='mt-1 flex items-start gap-2 p-2 bg-red-50 border border-red-200 rounded-md'>
+                          <AlertCircleIcon className='h-4 w-4 text-red-600 mt-0.5 flex-shrink-0' />
+                          <p className='text-xs text-red-800'>{dateError}</p>
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -175,8 +209,8 @@ const Modal = ({ isOpen, onClose, scene, onUpdate }: ModalProps) => {
                       </button>
                       <button
                         onClick={handleSave}
-                        disabled={isSaving}
-                        className='rounded-md bg-primary px-4 py-2 text-sm font-medium text-accent hover:bg-primary/90 disabled:opacity-50'
+                        disabled={isSaving || !!dateError}
+                        className='rounded-md bg-primary px-4 py-2 text-sm font-medium text-accent hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'
                       >
                         {isSaving ? "Salvando..." : "Salvar"}
                       </button>

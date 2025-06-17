@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback, memo } from 'react';
 
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
@@ -18,11 +18,19 @@ interface SceneProps {
   onUpdate?: (scene: SceneType) => void;
 }
 
+/**
+ * Função de computação pesada memoizada
+ * Processa o texto para exibição
+ */
 const heavyComputation = (text: string) => {
   return text.trim();
 };
 
-const Scene = ({
+/**
+ * Componente de cena otimizado com React.memo
+ * Evita re-renders desnecessários quando as props não mudam
+ */
+const Scene = memo(({
   id,
   title,
   description,
@@ -35,6 +43,7 @@ const Scene = ({
 }: SceneProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Memoiza os valores computados para evitar recálculos desnecessários
   const computedTitle = useMemo(() => {
     return heavyComputation(title);
   }, [title]);
@@ -43,21 +52,25 @@ const Scene = ({
     return heavyComputation(description);
   }, [description]);
 
-  const { attributes, listeners, setNodeRef, transform, active } = useDraggable({
+  // Memoiza os dados do drag and drop
+  const dragData = useMemo(() => ({
+    columnId,
+    step,
+    title,
+    description,
+    episode,
+    recordDate,
+    recordLocation,
+  }), [columnId, step, title, description, episode, recordDate, recordLocation]);
+
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id,
     attributes: { role: 'button' },
-    data: {
-      columnId,
-      step,
-      title,
-      description,
-      episode,
-      recordDate,
-      recordLocation,
-    },
+    data: dragData,
   });
 
-  const sceneDetails: SceneType = {
+  // Memoiza os detalhes da cena
+  const sceneDetails: SceneType = useMemo(() => ({
     id,
     title,
     description,
@@ -66,35 +79,37 @@ const Scene = ({
     columnId,
     recordDate,
     recordLocation,
-  };
+  }), [id, title, description, step, episode, columnId, recordDate, recordLocation]);
 
-  const handleUpdate = (updatedScene: SceneType) => {
+  // Callback memoizado para atualização
+  const handleUpdate = useCallback((updatedScene: SceneType) => {
     if (onUpdate) {
       onUpdate(updatedScene);
     }
-  };
+  }, [onUpdate]);
 
-  if (active?.id === id) {
-    return (
-      <div
-        ref={setNodeRef}
-        {...listeners}
-        {...attributes}
-        className='flex flex-col gap-2 p-2 cursor-pointer bg-primary opacity-50 text-accent rounded-lg border border-border'
-      >
-        <div className='flex flex-col gap-1'>
-          <span className='text-sm font-medium'>{computedTitle}</span>
-          <span className='text-xs'>{computedDescription}</span>
-        </div>
-      </div>
-    );
-  }
+  // Callback memoizado para abrir o modal
+  const handleOpenModal = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
+
+  // Callback memoizado para fechar o modal
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
+
+  const sceneContent = (
+    <div className='flex flex-col gap-1'>
+      <span className='text-sm font-medium'>{computedTitle}</span>
+      <span className='text-xs'>{computedDescription}</span>
+    </div>
+  );
 
   return (
     <div>
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         scene={sceneDetails}
         onUpdate={handleUpdate}
       />
@@ -106,16 +121,18 @@ const Scene = ({
         }}
         {...listeners}
         {...attributes}
-        onClick={() => setIsModalOpen(true)}
-        className='flex flex-col gap-2 p-2 cursor-pointer bg-primary text-accent rounded-lg border border-border'
+        onClick={handleOpenModal}
+        className={`flex flex-col gap-2 p-2 cursor-pointer rounded-lg border border-border ${isDragging
+          ? 'bg-primary/50 text-accent/80'
+          : 'bg-primary text-accent hover:bg-primary/90'
+          }`}
       >
-        <div className='flex flex-col gap-1'>
-          <span className='text-sm font-medium'>{computedTitle}</span>
-          <span className='text-xs'>{computedDescription}</span>
-        </div>
+        {sceneContent}
       </div>
     </div>
   );
-};
+});
+
+Scene.displayName = 'Scene';
 
 export { Scene, type SceneProps };

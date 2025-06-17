@@ -34,18 +34,38 @@ const sceneReducer = (state: State, action: Action): State => {
       return { ...state, scenes: action.payload, error: null };
 
     case 'MOVE_SCENE':
+      const sceneToMove = state.scenes.find(scene => scene.id === action.payload.id)
+      if (!sceneToMove || sceneToMove.step === action.payload.toStep) {
+        return state
+      }
+
       return {
         ...state,
         scenes: state.scenes.map((scene) =>
-          scene.id === action.payload.id ? { ...scene, step: action.payload.toStep } : scene,
+          scene.id === action.payload.id
+            ? { ...scene, step: action.payload.toStep }
+            : scene
         ),
       };
 
     case 'UPDATE_SCENE':
+      const sceneToUpdate = state.scenes.find(scene => scene.id === action.payload.id)
+      if (!sceneToUpdate) {
+        return state
+      }
+
+      const hasChanges = Object.keys(action.payload).some(key =>
+        sceneToUpdate[key as keyof Scene] !== action.payload[key as keyof Scene]
+      )
+
+      if (!hasChanges) {
+        return state
+      }
+
       return {
         ...state,
         scenes: state.scenes.map((scene) =>
-          scene.id === action.payload.id ? { ...scene, ...action.payload } : scene,
+          scene.id === action.payload.id ? { ...scene, ...action.payload } : scene
         ),
       };
 

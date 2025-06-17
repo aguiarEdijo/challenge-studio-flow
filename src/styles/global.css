@@ -11,3 +11,33 @@
     @apply bg-background text-foreground;
   }
 }
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS básico sem interferências no drag and drop */
+.kanban-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 100%;
+  /* Previne scroll durante drag */
+  scroll-behavior: smooth;
+}
+
+.column-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Previne scroll horizontal durante drag */
+.kanban-container:has(.dnd-kit-dragging) {
+  overflow-x: hidden;
+}
+
+/* Alternativa para navegadores que não suportam :has() */
+.kanban-container.dragging {
+  overflow-x: hidden;
+}
