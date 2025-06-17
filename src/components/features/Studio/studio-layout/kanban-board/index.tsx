@@ -1,10 +1,10 @@
 import { memo, useMemo, useCallback, useState } from 'react'
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestCenter } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { Column } from '../../../shared/column'
-import { Scene, type SceneProps } from '../scene'
-import { type Scene as SceneType } from '../../../../types'
-import { PRODUCTION_STEPS } from '../../../../utils/scene-transitions'
+import { Column } from '../../../../shared/column'
+import { Scene, type SceneProps } from '../../scene'
+import type { Scene as SceneType } from '../../../../../types'
+import { PRODUCTION_STEPS } from '../../../../../utils/scene-transitions'
 
 interface KanbanBoardProps {
     scenes: SceneType[]
@@ -15,13 +15,7 @@ interface KanbanBoardProps {
     onAddScene: (step: number) => void
 }
 
-/**
- * Componente do Kanban Board que exibe as cenas organizadas por etapas
- * Gerencia o drag and drop e a renderização das colunas
- * Otimizado para evitar re-renders desnecessários
- * Suporta reordenação dentro das colunas usando @dnd-kit/sortable
- * Inclui funcionalidade para adicionar novas cenas
- */
+
 export const KanbanBoard = memo(({
     scenes,
     activeScene,
@@ -32,7 +26,6 @@ export const KanbanBoard = memo(({
 }: KanbanBoardProps) => {
     const [isDragging, setIsDragging] = useState(false)
 
-    // Configuração otimizada dos sensores para melhor fluidez
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
@@ -65,7 +58,6 @@ export const KanbanBoard = memo(({
         return organized
     }, [scenes])
 
-    // Memoiza as colunas para evitar re-renders desnecessários
     const columns = useMemo(() => {
         return Object.keys(PRODUCTION_STEPS).map((stepKey) => {
             const step = Number(stepKey)

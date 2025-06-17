@@ -1,8 +1,8 @@
 import { useCallback, useState, useEffect } from 'react'
 import { type DragEndEvent, type DragStartEvent } from '@dnd-kit/core'
-import { arrayMove } from '@dnd-kit/sortable'
 import { type Scene } from '../types'
 import { validateTransition } from '../utils/scene-transitions'
+
 
 interface DragSceneData {
     id: string
@@ -22,13 +22,7 @@ interface PendingTransition {
     sceneTitle: string
 }
 
-/**
- * Hook especializado para gerenciar o drag and drop das cenas
- * Centraliza a lógica de drag and drop e mantém o estado do item ativo
- * Aplica regras de transição válidas entre etapas com mensagens específicas
- * Inclui confirmação antes de executar transições válidas
- * Reordenação dentro das colunas acontece diretamente sem confirmação
- */
+
 export function useDragAndDrop(
     onMoveScene: (id: string, toStep: number) => Promise<void>,
     onReorderScene: (id: string, toStep: number, toOrder: number, fromStep?: number, fromOrder?: number) => Promise<void>,
@@ -98,19 +92,15 @@ export function useDragAndDrop(
         const fromStep = activeData.step
         const toStep = overData.step
 
-        // Se está na mesma coluna, é uma reordenação
         if (fromStep === toStep) {
-            // Encontra as cenas na mesma coluna
             const columnScenes = scenes.filter(scene => scene.step === fromStep)
             const activeSceneIndex = columnScenes.findIndex(scene => scene.id === active.id)
             const overSceneIndex = columnScenes.findIndex(scene => scene.id === over.id)
 
             if (activeSceneIndex === -1 || overSceneIndex === -1) return
 
-            // Se a posição não mudou, não faz nada
             if (activeSceneIndex === overSceneIndex) return
 
-            // Executa a reordenação baseada na posição
             onReorderScene(
                 active.id as string,
                 toStep,
@@ -124,7 +114,6 @@ export function useDragAndDrop(
             return
         }
 
-        // Se está mudando de coluna, valida a transição
         const validation = validateTransition(fromStep, toStep)
 
         if (validation.isValid) {
@@ -152,6 +141,8 @@ export function useDragAndDrop(
             setShowSuccessFeedback(true)
         } catch (error) {
             console.error('Erro ao mover cena:', error)
+            // Aqui você pode adicionar um estado de erro se quiser mostrar feedback de erro
+            // Por enquanto, apenas loga o erro
         } finally {
             setIsConfirming(false)
         }

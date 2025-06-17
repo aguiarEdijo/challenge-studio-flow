@@ -1,13 +1,13 @@
-import { Fragment, useState, useEffect, useCallback, useMemo } from "react"
+import { Fragment, useState, useEffect } from "react"
 
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react"
 import { XIcon, AlertCircleIcon } from "lucide-react"
 
-import { Button } from '../../../shared/button'
-import { Input } from '../../../shared/input'
-import { type Scene as SceneDetails } from "../../../../types"
-import { PRODUCTION_STEPS, getValidNextSteps, isLastStep } from "../../../../utils/scene-transitions"
-import { isValidRecordingDate, getMinRecordingDate, getDateErrorMessage } from "../../../../utils/date-validation"
+
+import { type Scene as SceneDetails } from "../../../../../types"
+import { PRODUCTION_STEPS, getValidNextSteps, isLastStep } from "../../../../../utils/scene-transitions"
+import { getMinRecordingDate, getDateErrorMessage } from "../../../../../utils/date-validation"
+import { getFriendlyErrorMessage } from "../../../../../utils/error-handling"
 
 type SceneForCreation = Omit<SceneDetails, 'id'>
 
@@ -126,8 +126,9 @@ const Modal = ({ isOpen, onClose, scene, onUpdate, onCreate, isCreating = false 
       }
       onClose()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido ao salvar cena'
-      setSaveError(errorMessage)
+      // Obtém mensagem amigável
+      const friendlyMessage = getFriendlyErrorMessage(err)
+      setSaveError(friendlyMessage)
     } finally {
       setIsSaving(false)
     }
@@ -292,16 +293,6 @@ const Modal = ({ isOpen, onClose, scene, onUpdate, onCreate, isCreating = false 
                       )}
                     </div>
 
-                    {/* Mensagem de erro de salvamento */}
-                    {saveError && (
-                      <div className='flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-md'>
-                        <AlertCircleIcon className='h-4 w-4 text-red-600 mt-0.5 flex-shrink-0' />
-                        <div className='flex-1'>
-                          <p className='text-sm font-medium text-red-800 mb-1'>Erro ao salvar</p>
-                          <p className='text-xs text-red-700'>{saveError}</p>
-                        </div>
-                      </div>
-                    )}
 
                     <div className='mt-6 flex justify-end gap-3'>
                       <button

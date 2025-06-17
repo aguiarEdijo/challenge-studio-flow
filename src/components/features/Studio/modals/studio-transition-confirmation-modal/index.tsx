@@ -1,7 +1,7 @@
 import { Fragment } from "react"
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react"
 import { XIcon, ArrowRightIcon, CheckCircleIcon } from "lucide-react"
-import { PRODUCTION_STEPS } from "../../../../utils/scene-transitions"
+import { PRODUCTION_STEPS } from "../../../../../utils/scene-transitions"
 
 interface TransitionConfirmationModalProps {
     isOpen: boolean

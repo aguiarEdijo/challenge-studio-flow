@@ -17,8 +17,8 @@ export const useProductions = () => {
     return useQuery({
         queryKey: ['productions'],
         queryFn: fetchProductions,
-        staleTime: Infinity, // Nunca fica stale
-        gcTime: 10 * 60 * 1000, // 10 minutos
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
         refetchOnWindowFocus: false,
         refetchOnMount: false,
         refetchOnReconnect: false,
@@ -50,7 +50,11 @@ const moveScene = async ({ id, toStep }: { id: string; toStep: number }): Promis
     })
 
     if (!response.ok) {
-        throw new Error(`Erro ao mover cena: ${response.statusText}`)
+        // Cria um erro com informações de status para melhor tratamento
+        const error = new Error(`Erro ao mover cena`)
+            ; (error as any).status = response.status
+            ; (error as any).statusText = response.statusText
+        throw error
     }
 
     return response.json()
@@ -70,7 +74,11 @@ const updateScene = async (scene: Scene): Promise<Scene> => {
     })
 
     if (!response.ok) {
-        throw new Error(`Erro ao atualizar cena: ${response.statusText}`)
+        // Cria um erro com informações de status para melhor tratamento
+        const error = new Error(`Erro ao atualizar cena`)
+            ; (error as any).status = response.status
+            ; (error as any).statusText = response.statusText
+        throw error
     }
 
     return response.json()
@@ -89,7 +97,11 @@ const createScene = async (scene: Omit<Scene, 'id'>): Promise<Scene> => {
     })
 
     if (!response.ok) {
-        throw new Error(`Erro ao criar cena: ${response.statusText}`)
+        // Cria um erro com informações de status para melhor tratamento
+        const error = new Error(`Erro ao criar cena`)
+            ; (error as any).status = response.status
+            ; (error as any).statusText = response.statusText
+        throw error
     }
 
     return response.json()
@@ -215,13 +227,10 @@ export const useUpdateScene = () => {
     return useMutation({
         mutationFn: updateScene,
         onMutate: async (updatedScene) => {
-            // Cancela queries em andamento para evitar conflitos
             await queryClient.cancelQueries({ queryKey: ['scenes'] })
 
-            // Snapshot do estado anterior
             const previousScenes = queryClient.getQueryData(['scenes'])
 
-            // Atualização otimista
             queryClient.setQueryData(['scenes'], (oldData: Scene[] | undefined) => {
                 if (!oldData) return oldData
                 return oldData.map(scene =>
@@ -229,11 +238,9 @@ export const useUpdateScene = () => {
                 )
             })
 
-            // Retorna o contexto para rollback
             return { previousScenes }
         },
         onSuccess: (updatedScene) => {
-            // Atualiza o cache com os dados do servidor
             queryClient.setQueryData(['scenes'], (oldData: Scene[] | undefined) => {
                 if (!oldData) return [updatedScene]
                 return oldData.map(scene =>

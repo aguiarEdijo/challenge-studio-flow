@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AlertTriangleIcon, InfoIcon, CheckCircleIcon } from 'lucide-react'
-import { cn } from '../../../../utils/cn'
+import { cn } from '../../../../../utils/cn'
 
 interface TransitionFeedbackProps {
     isVisible: boolean
@@ -8,11 +8,6 @@ interface TransitionFeedbackProps {
     type?: 'error' | 'info' | 'success'
 }
 
-/**
- * Componente de feedback visual para transições
- * Aparece quando o usuário tenta fazer uma transição não permitida ou quando uma transição é bem-sucedida
- * Desaparece automaticamente após 1 segundo (erro) ou 2 segundos (sucesso)
- */
 export function TransitionFeedback({
     isVisible,
     message = 'Só é possível avançar uma etapa por vez',
@@ -49,18 +44,28 @@ export function TransitionFeedback({
 
     return (
         <div className={cn(
-            'fixed top-4 right-4 z-50 flex items-start gap-3 p-4 rounded-lg shadow-lg transition-all duration-200 max-w-sm',
+            'fixed top-6 right-6 z-50 flex items-center gap-4 p-5 rounded-xl shadow-xl transition-all duration-300 ease-out max-w-md backdrop-blur-sm',
+            'border border-opacity-20',
             isError
-                ? 'bg-destructive text-destructive-foreground border border-destructive/20'
+                ? 'bg-red-50 text-red-900 border-red-200 shadow-red-100/50'
                 : isSuccess
-                    ? 'bg-green-500 text-white border border-green-500/20'
-                    : 'bg-blue-500 text-white border border-blue-500/20',
-            show ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+                    ? 'bg-emerald-50 text-emerald-900 border-emerald-200 shadow-emerald-100/50'
+                    : 'bg-blue-50 text-blue-900 border-blue-200 shadow-blue-100/50',
+            show ? 'translate-x-0 opacity-100 scale-100' : 'translate-x-full opacity-0 scale-95'
         )}>
-            <Icon className="h-5 w-5 mt-0.5 flex-shrink-0" />
-            <div className="flex-1">
-                <p className="text-sm font-medium mb-1">{title}</p>
-                <p className="text-sm leading-relaxed">{message}</p>
+            <div className={cn(
+                'flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0',
+                isError
+                    ? 'bg-red-100 text-red-600'
+                    : isSuccess
+                        ? 'bg-emerald-100 text-emerald-600'
+                        : 'bg-blue-100 text-blue-600'
+            )}>
+                <Icon className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-semibold mb-1 leading-tight">{title}</h4>
+                <p className="text-sm text-opacity-80 leading-relaxed">{message}</p>
             </div>
         </div>
     )
