@@ -27,7 +27,7 @@ const navigation = [
 
 export function Sidebar() {
   return (
-    <div className='flex h-full w-64 flex-col border-r border-border bg-background'>
+    <div className='flex h-full w-56 flex-col border-r border-border bg-background'>
       <div className='flex h-14 items-center border-b border-border px-4'>
         <h2 className='text-lg font-semibold text-foreground'>Menu</h2>
       </div>

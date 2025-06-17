@@ -25,6 +25,18 @@ export function TransitionConfirmationModal({
     const fromStepLabel = PRODUCTION_STEPS[fromStep as keyof typeof PRODUCTION_STEPS]
     const toStepLabel = PRODUCTION_STEPS[toStep as keyof typeof PRODUCTION_STEPS]
 
+    const handleConfirm = (e: React.MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        onConfirm()
+    }
+
+    const handleClose = (e: React.MouseEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        onClose()
+    }
+
     return (
         <Transition appear show={isOpen} as={Fragment}>
             <Dialog as='div' className='relative z-50' onClose={onClose}>
@@ -57,9 +69,9 @@ export function TransitionConfirmationModal({
                                         Confirmar Transição
                                     </DialogTitle>
                                     <button
-                                        onClick={onClose}
+                                        onClick={handleClose}
                                         disabled={isConfirming}
-                                        className='rounded-full p-1 hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+                                        className='rounded-full p-1 hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer'
                                     >
                                         <XIcon className='h-5 w-5 text-primary' />
                                     </button>
@@ -111,16 +123,16 @@ export function TransitionConfirmationModal({
                                     {/* Botões de ação */}
                                     <div className='mt-6 flex justify-end gap-3'>
                                         <button
-                                            onClick={onClose}
+                                            onClick={handleClose}
                                             disabled={isConfirming}
-                                            className='rounded-md px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed'
+                                            className='rounded-md px-4 py-2 text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer'
                                         >
                                             Cancelar
                                         </button>
                                         <button
-                                            onClick={onConfirm}
+                                            onClick={handleConfirm}
                                             disabled={isConfirming}
-                                            className='rounded-md bg-primary px-4 py-2 text-sm font-medium text-accent hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'
+                                            className='rounded-md bg-primary px-4 py-2 text-sm font-medium text-accent hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer'
                                         >
                                             {isConfirming ? (
                                                 <>

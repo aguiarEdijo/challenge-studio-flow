@@ -1,6 +1,7 @@
 import { useCallback, useState, useEffect } from 'react'
 import { type DragEndEvent, type DragStartEvent } from '@dnd-kit/core'
-import { type Scene } from '../reducers/scenes'
+import { arrayMove } from '@dnd-kit/sortable'
+import { type Scene } from '../types'
 import { validateTransition } from '../utils/scene-transitions'
 
 interface DragSceneData {
@@ -26,8 +27,13 @@ interface PendingTransition {
  * Centraliza a lógica de drag and drop e mantém o estado do item ativo
  * Aplica regras de transição válidas entre etapas com mensagens específicas
  * Inclui confirmação antes de executar transições válidas
+ * Reordenação dentro das colunas acontece diretamente sem confirmação
  */
-export function useDragAndDrop(onMoveScene: (id: string, toStep: number) => Promise<void>) {
+export function useDragAndDrop(
+    onMoveScene: (id: string, toStep: number) => Promise<void>,
+    onReorderScene: (id: string, toStep: number, toOrder: number, fromStep?: number, fromOrder?: number) => Promise<void>,
+    scenes: Scene[]
+) {
     const [activeScene, setActiveScene] = useState<DragSceneData | null>(null)
     const [showInvalidTransition, setShowInvalidTransition] = useState(false)
     const [transitionMessage, setTransitionMessage] = useState('')
@@ -36,7 +42,6 @@ export function useDragAndDrop(onMoveScene: (id: string, toStep: number) => Prom
     const [showSuccessFeedback, setShowSuccessFeedback] = useState(false)
     const [successMessage, setSuccessMessage] = useState('')
 
-    // Remove a mensagem de erro automaticamente após 1 segundo
     useEffect(() => {
         if (showInvalidTransition) {
             const timer = setTimeout(() => {
@@ -48,7 +53,6 @@ export function useDragAndDrop(onMoveScene: (id: string, toStep: number) => Prom
         }
     }, [showInvalidTransition])
 
-    // Remove a mensagem de sucesso automaticamente após 2 segundos
     useEffect(() => {
         if (showSuccessFeedback) {
             const timer = setTimeout(() => {
@@ -61,7 +65,6 @@ export function useDragAndDrop(onMoveScene: (id: string, toStep: number) => Prom
     }, [showSuccessFeedback])
 
     const handleDragStart = useCallback((event: DragStartEvent) => {
-        // Remove mensagem de erro ao iniciar novo drag
         setShowInvalidTransition(false)
         setTransitionMessage('')
 
@@ -80,35 +83,62 @@ export function useDragAndDrop(onMoveScene: (id: string, toStep: number) => Prom
         })
     }, [])
 
-    const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const handleDragEnd = useCallback((event: DragEndEvent) => {
         setActiveScene(null)
 
         const { active, over } = event
 
         if (!over || active.id === over.id) return
 
-        const fromStep = active.data.current?.step
-        const toStep = over.data.current?.step
+        const activeData = active.data.current as DragSceneData
+        const overData = over.data.current as DragSceneData
 
-        if (typeof toStep !== 'number' || typeof fromStep !== 'number') return
+        if (!activeData || !overData) return
 
-        // Valida a transição e obtém mensagem específica
+        const fromStep = activeData.step
+        const toStep = overData.step
+
+        // Se está na mesma coluna, é uma reordenação
+        if (fromStep === toStep) {
+            // Encontra as cenas na mesma coluna
+            const columnScenes = scenes.filter(scene => scene.step === fromStep)
+            const activeSceneIndex = columnScenes.findIndex(scene => scene.id === active.id)
+            const overSceneIndex = columnScenes.findIndex(scene => scene.id === over.id)
+
+            if (activeSceneIndex === -1 || overSceneIndex === -1) return
+
+            // Se a posição não mudou, não faz nada
+            if (activeSceneIndex === overSceneIndex) return
+
+            // Executa a reordenação baseada na posição
+            onReorderScene(
+                active.id as string,
+                toStep,
+                overSceneIndex,
+                fromStep,
+                activeSceneIndex
+            )
+
+            setSuccessMessage(`Cena "${activeData.title}" reordenada com sucesso!`)
+            setShowSuccessFeedback(true)
+            return
+        }
+
+        // Se está mudando de coluna, valida a transição
         const validation = validateTransition(fromStep, toStep)
 
         if (validation.isValid) {
-            // Em vez de executar imediatamente, armazena a transição pendente
             setPendingTransition({
                 sceneId: active.id as string,
                 fromStep,
                 toStep,
-                sceneTitle: active.data.current?.title || 'Cena sem título'
+                sceneTitle: activeData.title || 'Cena sem título'
             })
         } else {
-            // Mostra feedback visual com mensagem específica
             setTransitionMessage(validation.message)
             setShowInvalidTransition(true)
         }
-    }, [])
+    }, [scenes, onReorderScene])
 
     const handleConfirmTransition = useCallback(async () => {
         if (!pendingTransition) return
@@ -117,13 +147,10 @@ export function useDragAndDrop(onMoveScene: (id: string, toStep: number) => Prom
 
         try {
             await onMoveScene(pendingTransition.sceneId, pendingTransition.toStep)
-            // Fecha o modal de confirmação após sucesso
             setPendingTransition(null)
-            // Mostra feedback de sucesso
             setSuccessMessage(`Cena "${pendingTransition.sceneTitle}" movida com sucesso!`)
             setShowSuccessFeedback(true)
         } catch (error) {
-            // O erro será tratado pelo hook useScenes e exibido pelo ErrorFeedback
             console.error('Erro ao mover cena:', error)
         } finally {
             setIsConfirming(false)

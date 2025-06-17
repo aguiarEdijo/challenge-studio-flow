@@ -1,6 +1,5 @@
 import { ArrowLeftIcon } from 'lucide-react'
 import { Button } from '../../../shared/button'
-import Title from '../title'
 
 interface StudioHeaderProps {
     onBack: () => void
@@ -12,11 +11,13 @@ interface StudioHeaderProps {
  */
 export function StudioHeader({ onBack }: StudioHeaderProps) {
     return (
-        <div className='flex items-center gap-4'>
+        <div className="flex items-center gap-4 mb-4 mt-2">
             <Button variant='outline' size='icon' onClick={onBack}>
                 <ArrowLeftIcon />
             </Button>
-            <Title />
+            <h1 className="text-2xl font-extrabold text-primary tracking-tight" style={{ letterSpacing: '0.01em' }}>
+                Renascer
+            </h1>
         </div>
     )
 } 

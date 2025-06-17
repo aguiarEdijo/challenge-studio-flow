@@ -1,10 +1,9 @@
-import { useMemo, useState, useCallback, memo } from 'react';
+import { useMemo, useCallback, memo } from 'react';
 
-import { useDraggable } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-import { type Scene as SceneType } from '../../../../reducers/scenes';
-import { Modal } from '../modal';
+import { type Scene as SceneType } from '../../../../types';
 
 interface SceneProps {
   id: string;
@@ -29,6 +28,7 @@ const heavyComputation = (text: string) => {
 /**
  * Componente de cena otimizado com React.memo
  * Evita re-renders desnecessários quando as props não mudam
+ * Suporta reordenação usando @dnd-kit/sortable
  */
 const Scene = memo(({
   id,
@@ -41,8 +41,6 @@ const Scene = memo(({
   recordLocation,
   onUpdate,
 }: SceneProps) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
   // Memoiza os valores computados para evitar recálculos desnecessários
   const computedTitle = useMemo(() => {
     return heavyComputation(title);
@@ -63,9 +61,8 @@ const Scene = memo(({
     recordLocation,
   }), [columnId, step, title, description, episode, recordDate, recordLocation]);
 
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
-    attributes: { role: 'button' },
     data: dragData,
   });
 
@@ -81,66 +78,63 @@ const Scene = memo(({
     recordLocation,
   }), [id, title, description, step, episode, columnId, recordDate, recordLocation]);
 
-  // Callback memoizado para atualização
-  const handleUpdate = useCallback((updatedScene: SceneType) => {
-    if (onUpdate) {
-      onUpdate(updatedScene);
-    }
-  }, [onUpdate]);
-
-  // Callback memoizado para abrir o modal
+  // Callback memoizado para abrir o modal de edição
   const handleOpenModal = useCallback((e: React.MouseEvent) => {
     // Previne a abertura do modal durante o drag
     if (isDragging) return;
+
+    // Previne a propagação do evento para evitar conflitos
+    e.preventDefault();
     e.stopPropagation();
-    setIsModalOpen(true);
-  }, [isDragging]);
 
-  // Callback memoizado para fechar o modal
-  const handleCloseModal = useCallback(() => {
-    setIsModalOpen(false);
-  }, []);
+    console.log('Scene clicked:', sceneDetails); // Debug
 
-  const sceneContent = (
+    // Chama o callback de edição passado do componente pai
+    if (onUpdate) {
+      onUpdate(sceneDetails);
+    }
+  }, [isDragging, onUpdate, sceneDetails]);
+
+  // Memoiza o conteúdo da cena para evitar re-renders
+  const sceneContent = useMemo(() => (
     <div
-      className='flex flex-col gap-1 select-none'
-      onClick={handleOpenModal}
+      className='flex flex-col gap-1 select-none cursor-pointer'
+      style={{ pointerEvents: isDragging ? 'none' : 'auto' }}
     >
       <span className='text-sm font-medium leading-tight'>{computedTitle}</span>
       <span className='text-xs leading-tight text-accent/80'>{computedDescription}</span>
     </div>
-  );
+  ), [computedTitle, computedDescription, isDragging]);
+
+  // Memoiza o className para evitar recriações
+  const sceneClassName = useMemo(() => `
+    scene-card drag-optimized
+    flex flex-col gap-2 p-3
+    cursor-grab active:cursor-grabbing
+    rounded-lg border border-border/50
+    select-none touch-none
+    relative
+    ${isDragging
+      ? 'bg-primary/90 text-accent shadow-2xl scale-105 rotate-1 z-50'
+      : 'bg-primary text-accent hover:bg-primary/90 hover:shadow-lg hover:scale-[1.02]'
+    }
+  `, [isDragging]);
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   return (
-    <div>
-      <Modal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        scene={sceneDetails}
-        onUpdate={handleUpdate}
-      />
-
-      <div
-        ref={setNodeRef}
-        style={{
-          transform: CSS.Translate.toString(transform),
-        }}
-        {...listeners}
-        {...attributes}
-        className={`
-          scene-card drag-optimized
-          flex flex-col gap-2 p-3 
-          cursor-grab active:cursor-grabbing
-          rounded-lg border border-border/50
-          select-none touch-none
-          ${isDragging
-            ? 'bg-primary/90 text-accent shadow-2xl scale-105 rotate-1 z-50'
-            : 'bg-primary text-accent hover:bg-primary/90 hover:shadow-lg hover:scale-[1.02]'
-          }
-        `}
-      >
-        {sceneContent}
-      </div>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={sceneClassName}
+      onClick={handleOpenModal}
+    >
+      {sceneContent}
     </div>
   );
 });

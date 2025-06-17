@@ -1,6 +1,6 @@
 import { PlayIcon } from 'lucide-react'
 import { Card } from '../../../shared/card'
-import { type Production } from '../../../../contexts/production'
+import { type Production } from '../../../../types'
 
 interface ProductionListProps {
     productions: Production[]
