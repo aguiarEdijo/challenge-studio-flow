@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ErrorBoundaryProvider } from './components/shared/error-boundary/components'
 import Routes from "./routes"
 import "./styles/global.css"
 
@@ -29,9 +30,21 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Routes />
-    </QueryClientProvider>
+    <ErrorBoundaryProvider
+      onError={(error, errorInfo) => {
+        // Log do erro para monitoramento
+        console.error('App Error Boundary caught an error:', {
+          error: error.message,
+          stack: error.stack,
+          componentStack: errorInfo.componentStack,
+          timestamp: new Date().toISOString(),
+        })
+      }}
+    >
+      <QueryClientProvider client={queryClient}>
+        <Routes />
+      </QueryClientProvider>
+    </ErrorBoundaryProvider>
   )
 }
 

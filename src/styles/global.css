@@ -16,6 +16,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Variáveis para scroll personalizado */
+:root {
+  --scrollbar-width: 8px;
+  --scrollbar-track-color: transparent;
+  --scrollbar-thumb-color: rgba(156, 163, 175, 0.3);
+  --scrollbar-thumb-hover: rgba(156, 163, 175, 0.5);
+  --scrollbar-thumb-active: rgba(156, 163, 175, 0.7);
+  --scrollbar-border-radius: 4px;
+  --scrollbar-transition: all 0.2s ease;
+}
+
 /* CSS básico sem interferências no drag and drop */
 .kanban-container {
   overflow-x: auto;
@@ -23,6 +34,8 @@
   height: 100%;
   /* Previne scroll durante drag */
   scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb-color) transparent;
 }
 
 .column-scroll {
@@ -30,6 +43,8 @@
   scroll-behavior: smooth;
   overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb-color) transparent;
 }
 
 /* Previne scroll horizontal durante drag */
@@ -40,6 +55,92 @@
 /* Alternativa para navegadores que não suportam :has() */
 .kanban-container.dragging {
   overflow-x: hidden;
+}
+
+/* Estilos para lista virtualizada */
+.virtual-list {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb-color) transparent;
+  /* Garante que o scroll funcione corretamente */
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  /* Scroll suave */
+  scroll-behavior: smooth;
+  /* Melhora a performance do scroll */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Scroll personalizado para Webkit (Chrome, Safari, Edge) */
+.virtual-list::-webkit-scrollbar,
+.column-scroll::-webkit-scrollbar {
+  width: var(--scrollbar-width);
+  background: var(--scrollbar-track-color);
+}
+
+.virtual-list::-webkit-scrollbar-track,
+.column-scroll::-webkit-scrollbar-track {
+  background: var(--scrollbar-track-color);
+  border-radius: var(--scrollbar-border-radius);
+  margin: 4px 0;
+}
+
+.virtual-list::-webkit-scrollbar-thumb,
+.column-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(156, 163, 175, 0.4) 0%, rgba(156, 163, 175, 0.2) 100%);
+  border-radius: var(--scrollbar-border-radius);
+  border: 1px solid rgba(156, 163, 175, 0.1);
+  transition: var(--scrollbar-transition);
+  backdrop-filter: blur(4px);
+}
+
+.virtual-list::-webkit-scrollbar-thumb:hover,
+.column-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(156, 163, 175, 0.6) 0%, rgba(156, 163, 175, 0.4) 100%);
+  transform: scaleX(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.virtual-list::-webkit-scrollbar-thumb:active,
+.column-scroll::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, rgba(156, 163, 175, 0.8) 0%, rgba(156, 163, 175, 0.6) 100%);
+  transform: scaleX(1.05);
+}
+
+/* Scroll personalizado para o container do Kanban */
+.kanban-container::-webkit-scrollbar {
+  height: var(--scrollbar-width);
+  background: var(--scrollbar-track-color);
+}
+
+.kanban-container::-webkit-scrollbar-track {
+  background: var(--scrollbar-track-color);
+  border-radius: var(--scrollbar-border-radius);
+  margin: 0 4px;
+}
+
+.kanban-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, rgba(156, 163, 175, 0.4) 0%, rgba(156, 163, 175, 0.2) 100%);
+  border-radius: var(--scrollbar-border-radius);
+  border: 1px solid rgba(156, 163, 175, 0.1);
+  transition: var(--scrollbar-transition);
+  backdrop-filter: blur(4px);
+}
+
+.kanban-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, rgba(156, 163, 175, 0.6) 0%, rgba(156, 163, 175, 0.4) 100%);
+  transform: scaleY(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.kanban-container::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(90deg, rgba(156, 163, 175, 0.8) 0%, rgba(156, 163, 175, 0.6) 100%);
+  transform: scaleY(1.05);
+}
+
+/* Otimizações para virtualização */
+.virtual-list>div {
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 /* Melhorias para drag and drop */
