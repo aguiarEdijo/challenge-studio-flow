@@ -16,6 +16,7 @@ export function useSceneForm({ isOpen, scene, isCreating = false }: UseSceneForm
     const [dateError, setDateError] = useState<string | null>(null)
     const [saveError, setSaveError] = useState<string | null>(null)
     const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+    const [hasUserEditedDate, setHasUserEditedDate] = useState(false)
 
     // Reset do estado quando o modal abre/fecha ou quando a cena muda
     useEffect(() => {
@@ -27,13 +28,19 @@ export function useSceneForm({ isOpen, scene, isCreating = false }: UseSceneForm
                     recordDate: scene.recordDate ? maskDate(scene.recordDate) : ''
                 }
                 setEditedScene(maskedScene)
+
+                // Valida a data existente na abertura do modal
+                if (maskedScene.recordDate) {
+                    const errorMessage = getDateErrorMessage(maskedScene.recordDate)
+                    setDateError(errorMessage)
+                }
             } else if (isCreating) {
                 // Modo criação
                 setEditedScene(DEFAULT_SCENE)
             }
-            setDateError(null)
             setSaveError(null)
             setValidationErrors({})
+            setHasUserEditedDate(false)
         }
     }, [isOpen, scene, isCreating])
 
@@ -43,12 +50,24 @@ export function useSceneForm({ isOpen, scene, isCreating = false }: UseSceneForm
         if (field === "recordDate") {
             const maskedDate = value as string
 
+            // Marca que o usuário editou o campo de data
+            setHasUserEditedDate(true)
+
             // Atualiza o valor com máscara
             setEditedScene({ ...editedScene, [field]: maskedDate })
 
             // Valida a data e atualiza o erro
             const errorMessage = getDateErrorMessage(maskedDate)
             setDateError(errorMessage)
+
+            // Limpa erro de validação do campo se existir
+            if (validationErrors.recordDate) {
+                setValidationErrors(prev => {
+                    const newErrors = { ...prev }
+                    delete newErrors.recordDate
+                    return newErrors
+                })
+            }
             return
         }
 
