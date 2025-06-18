@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import type { Scene as SceneDetails } from '../../../../../../types/index'
 import type { SceneForCreation } from '../types'
 import { DEFAULT_SCENE, VALIDATION_MESSAGES } from '../constants'
-import { getDateErrorMessage } from '../../../../../../utils/date-validation'
+import { getDateErrorMessage, normalizeDate, maskDate } from '../../../../../../utils/date-validation'
 
 interface UseSceneFormProps {
     isOpen: boolean
@@ -16,20 +16,31 @@ export function useSceneForm({ isOpen, scene, isCreating = false }: UseSceneForm
     const [dateError, setDateError] = useState<string | null>(null)
     const [saveError, setSaveError] = useState<string | null>(null)
     const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+    const [hasUserEditedDate, setHasUserEditedDate] = useState(false)
 
     // Reset do estado quando o modal abre/fecha ou quando a cena muda
     useEffect(() => {
         if (isOpen) {
             if (scene) {
-                // Modo edição
-                setEditedScene({ ...scene })
+                // Modo edição - converte a data para o formato com máscara se existir
+                const maskedScene = {
+                    ...scene,
+                    recordDate: scene.recordDate ? maskDate(scene.recordDate) : ''
+                }
+                setEditedScene(maskedScene)
+
+                // Valida a data existente na abertura do modal
+                if (maskedScene.recordDate) {
+                    const errorMessage = getDateErrorMessage(maskedScene.recordDate)
+                    setDateError(errorMessage)
+                }
             } else if (isCreating) {
                 // Modo criação
                 setEditedScene(DEFAULT_SCENE)
             }
-            setDateError(null)
             setSaveError(null)
             setValidationErrors({})
+            setHasUserEditedDate(false)
         }
     }, [isOpen, scene, isCreating])
 
@@ -37,12 +48,26 @@ export function useSceneForm({ isOpen, scene, isCreating = false }: UseSceneForm
         if (!editedScene) return
 
         if (field === "recordDate") {
-            const dateValue = value as string
-            setEditedScene({ ...editedScene, [field]: dateValue })
+            const maskedDate = value as string
+
+            // Marca que o usuário editou o campo de data
+            setHasUserEditedDate(true)
+
+            // Atualiza o valor com máscara
+            setEditedScene({ ...editedScene, [field]: maskedDate })
 
             // Valida a data e atualiza o erro
-            const errorMessage = getDateErrorMessage(dateValue)
+            const errorMessage = getDateErrorMessage(maskedDate)
             setDateError(errorMessage)
+
+            // Limpa erro de validação do campo se existir
+            if (validationErrors.recordDate) {
+                setValidationErrors(prev => {
+                    const newErrors = { ...prev }
+                    delete newErrors.recordDate
+                    return newErrors
+                })
+            }
             return
         }
 
@@ -77,8 +102,12 @@ export function useSceneForm({ isOpen, scene, isCreating = false }: UseSceneForm
             errors.recordLocation = VALIDATION_MESSAGES.recordLocation
         }
 
-        if (dateError) {
-            errors.recordDate = dateError
+        // Valida data se fornecida
+        if (scene.recordDate) {
+            const dateError = getDateErrorMessage(scene.recordDate)
+            if (dateError) {
+                errors.recordDate = dateError
+            }
         }
 
         setValidationErrors(errors)
@@ -101,13 +130,19 @@ export function useSceneForm({ isOpen, scene, isCreating = false }: UseSceneForm
         setSaveError(null)
 
         try {
+            // Converte a data com máscara para o formato ISO antes de salvar
+            const sceneToSave = {
+                ...editedScene,
+                recordDate: editedScene.recordDate ? normalizeDate(editedScene.recordDate) : ''
+            }
+
             if (isCreating && onCreate) {
                 // Modo criação - remove o ID temporário
-                const { id, ...sceneForCreation } = editedScene
+                const { id, ...sceneForCreation } = sceneToSave
                 await onCreate(sceneForCreation)
             } else if (onUpdate) {
                 // Modo edição
-                await onUpdate(editedScene)
+                await onUpdate(sceneToSave)
             }
             onClose?.()
         } catch (err) {

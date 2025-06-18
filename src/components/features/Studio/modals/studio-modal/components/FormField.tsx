@@ -1,4 +1,5 @@
 import { cn } from '../../../../../../utils/cn'
+import { applyDateMask } from '../../../../../../utils/date-validation'
 import type { FormFieldProps } from '../types'
 
 export function FormField({
@@ -24,6 +25,39 @@ export function FormField({
             : 'border-border hover:border-primary/30'
     )
 
+    const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const inputValue = e.target.value
+
+        // Se o campo está vazio, permite
+        if (!inputValue) {
+            onChange('')
+            return
+        }
+
+        // Aplica a máscara
+        const maskedValue = applyDateMask(inputValue)
+
+        // Atualiza o valor com a máscara aplicada
+        onChange(maskedValue)
+    }
+
+    const handleDateKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        // Permite apenas números, backspace, delete, tab, enter, setas e /
+        const allowedKeys = [
+            'Backspace', 'Delete', 'Tab', 'Enter', 'Escape',
+            'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+            'Home', 'End'
+        ]
+
+        const isNumber = /^\d$/.test(e.key)
+        const isSlash = e.key === '/'
+        const isAllowedKey = allowedKeys.includes(e.key)
+
+        if (!isNumber && !isSlash && !isAllowedKey) {
+            e.preventDefault()
+        }
+    }
+
     const renderInput = () => {
         if (type === 'textarea') {
             return (
@@ -34,6 +68,23 @@ export function FormField({
                     className={inputClasses}
                     rows={rows}
                     placeholder={placeholder}
+                />
+            )
+        }
+
+        if (type === 'date') {
+            return (
+                <input
+                    id={inputId}
+                    type="text"
+                    value={value}
+                    onChange={handleDateChange}
+                    onKeyDown={handleDateKeyDown}
+                    className={inputClasses}
+                    placeholder="DD/MM/AAAA"
+                    maxLength={10}
+                    inputMode="numeric"
+                    autoComplete="off"
                 />
             )
         }

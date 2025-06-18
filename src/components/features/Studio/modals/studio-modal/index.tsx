@@ -119,7 +119,7 @@ const Modal = ({
                         label={FIELD_LABELS.recordDate}
                         value={editedScene.recordDate}
                         onChange={value => handleChange("recordDate", value)}
-                        error={dateError || validationErrors.recordDate}
+                        error={dateError || undefined}
                         type="date"
                         min={getMinRecordingDate()}
                       />

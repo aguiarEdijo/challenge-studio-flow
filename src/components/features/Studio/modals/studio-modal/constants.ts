@@ -4,8 +4,8 @@ export const DEFAULT_SCENE = {
     id: '',
     title: '',
     description: '',
-    step: 1,
-    columnId: 'column-1',
+    step: 0,
+    columnId: 'column-0',
     episode: '',
     recordDate: getMinRecordingDate(),
     recordLocation: ''
