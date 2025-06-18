@@ -43,12 +43,12 @@
       "id": "1",
       "title": "A Chegada",
       "description": "João chega à cidade em busca de uma nova vida",
-      "step": 1,
+      "step": 3,
       "episode": "1",
       "columnId": "column-1",
       "recordDate": "2000-03-15",
       "recordLocation": "Estúdio Central",
-      "updatedAt": "2025-06-05T23:23:13.281Z",
+      "updatedAt": "2025-06-18T00:46:24.024Z",
       "version": 0.9819784473304957
     },
     {
