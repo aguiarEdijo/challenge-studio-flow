@@ -109,7 +109,7 @@ const Scene = memo(({
   // Memoiza o className para evitar recriações
   const sceneClassName = useMemo(() => `
     scene-card drag-optimized
-    flex flex-col gap-2 p-3
+    flex flex-col gap-2 p-2.5 ml-1
     cursor-grab active:cursor-grabbing
     rounded-lg border border-border/50
     select-none touch-none

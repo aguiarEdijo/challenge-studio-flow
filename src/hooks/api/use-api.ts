@@ -37,6 +37,33 @@ const fetchScenes = async (): Promise<Scene[]> => {
     return response.json()
 }
 
+export const useScenes = () => {
+    return useQuery({
+        queryKey: ['scenes'],
+        queryFn: fetchScenes,
+        staleTime: Infinity, // Nunca fica stale
+        gcTime: 10 * 60 * 1000, // 10 minutos
+        refetchOnWindowFocus: false,
+        refetchOnMount: false,
+        refetchOnReconnect: false,
+        refetchInterval: false,
+    })
+}
+
+export const useVirtualizedScenes = () => {
+    return useQuery({
+        queryKey: ['scenes', 'virtualized'],
+        queryFn: fetchScenes,
+        staleTime: 5 * 60 * 1000, // 5 minutos para permitir atualizações ocasionais
+        gcTime: 15 * 60 * 1000, // 15 minutos em cache
+        refetchOnWindowFocus: false,
+        refetchOnMount: false,
+        refetchOnReconnect: false,
+        refetchInterval: false,
+        structuralSharing: false, // Desabilita para melhor performance com listas grandes
+    })
+}
+
 const moveScene = async ({ id, toStep }: { id: string; toStep: number }): Promise<Scene> => {
     const response = await fetch(`${import.meta.env.VITE_API_URL}/scenes/${id}`, {
         method: 'PATCH',
@@ -105,19 +132,6 @@ const createScene = async (scene: Omit<Scene, 'id'>): Promise<Scene> => {
     }
 
     return response.json()
-}
-
-export const useScenes = () => {
-    return useQuery({
-        queryKey: ['scenes'],
-        queryFn: fetchScenes,
-        staleTime: Infinity, // Nunca fica stale
-        gcTime: 10 * 60 * 1000, // 10 minutos
-        refetchOnWindowFocus: false,
-        refetchOnMount: false,
-        refetchOnReconnect: false,
-        refetchInterval: false,
-    })
 }
 
 export const useMoveScene = () => {
